@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # xihu_copy
 
 This template should help get you started developing with Vue 3 in Vite.
@@ -37,3 +38,6 @@ pnpm build
 ```sh
 pnpm lint
 ```
+=======
+# xihu
+>>>>>>> bf9cdfc3d7d1294b204a8b7cc7c1bb3a3b916309
