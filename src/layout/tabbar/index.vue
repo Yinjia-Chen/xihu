@@ -1,12 +1,17 @@
 <script setup lang="ts">
 // 引入 title & logo 配置
 import setting from '@/setting'
+// 引入 User 仓库
+import useUserStore from '@/store/modules/user'
 // 引入 LayoutSetting 仓库
-import useLayoutSettingStore from '@/stores/setting'
+import useLayoutSettingStore from '@/store/setting'
 
+import { UserFilled } from '@element-plus/icons-vue'
 // 引入 Menu 子组件
 import Menu from './Menu.vue'
 
+// 使用 User 仓库
+const userStore = useUserStore()
 // 使用 LayoutSetting 仓库
 const layoutSettingStore = useLayoutSettingStore()
 </script>
@@ -22,6 +27,7 @@ export default {
   <div class="underframe">
     <!-- logo -->
     <img :src="setting.logo(1)" class="logo" />
+
     <el-menu
       default-active="1"
       mode="horizontal"
@@ -48,6 +54,16 @@ export default {
           <Histogram />
         </el-icon>
       </el-menu-item>
+
+      <!-- 用户登陆｜注册 -->
+      <div class="loginAbout">
+        <el-button class="log" @click="layoutSettingStore.dialogFormVisible = true">
+          <el-icon :size="22">
+            <UserFilled />
+          </el-icon>
+          登陆|注册
+        </el-button>
+      </div>
     </el-menu>
   </div>
 </template>
@@ -78,5 +94,20 @@ export default {
     height: 0.6714rem;
     margin: 0 0.4286rem 0 1.7143rem;
   }
+
+  .loginAbout {
+    margin-left: 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.log {
+  height: 0.6rem;
+  border-radius: 0.1rem;
+  color: #0d49df;
+  padding: 0px 0.0714rem;
+  line-height: 0.6rem;
+  font-size: 0.2571rem;
 }
 </style>

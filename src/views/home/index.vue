@@ -2,7 +2,7 @@
 
 <template>
   <div>
-    <p>一级路由 展示页面</p>
+    <p>home</p>
   </div>
 </template>
 

@@ -6,6 +6,7 @@ export const constantRoutesPC = [
     path: '/',
     component: () => import('@/layout/index.vue'),
     name: 'layout',
+    redirect: '/home',
     meta: {
       title: '',
       hidden: false,
