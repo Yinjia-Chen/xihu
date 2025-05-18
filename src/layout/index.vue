@@ -103,8 +103,7 @@ function validatorPassword(_rule: any, value: any, callback: any) {
 
   if (lengthCheck && lowercaseCheck && uppercaseCheck && numberCheck) {
     callback()
-  }
-  else {
+  } else {
     let errorMessage = '密码必须包含大写字母、小写字母和数字'
     if (!lengthCheck) {
       errorMessage = '密码长度应当为6-15位'
@@ -115,11 +114,9 @@ function validatorPassword(_rule: any, value: any, callback: any) {
 function validatePwdCheck(_rule: any, value: any, callback: any) {
   if (value === '') {
     callback(new Error('请再次输入密码'))
-  }
-  else if (value !== regForm.password) {
+  } else if (value !== regForm.password) {
     callback(new Error('两次输入密码不一致!'))
-  }
-  else {
+  } else {
     callback()
   }
 }
@@ -206,8 +203,7 @@ async function login() {
           type: 'error',
         })
       })
-  }
-  else {
+  } else {
     // 手机号登录
     await logForm2.value.validate()
     await phoneLogin(phoneLogForm)
@@ -335,9 +331,7 @@ async function register() {
         <div class="login_container">
           <!-- 头部 -->
           <div class="header">
-            <div class="title">
-              西湖论剑·数字安全大会
-            </div>
+            <div class="title">西湖论剑·数字安全大会</div>
             <div class="login">
               <span :class="{ login1: isAccLog }" @click="isAccLog = true">账号</span>
               <span :class="{ login2: !isAccLog }" @click="isAccLog = false">手机号</span>
@@ -387,13 +381,11 @@ async function register() {
                     class="captcha"
                     alt="点击重新加载"
                     @click="refreshCaptcha"
-                  >
+                  />
                 </template>
               </el-input>
             </el-form-item>
-            <div class="register" @click="dialogRegisterVisible = true">
-              没有账号？点击注册
-            </div>
+            <div class="register" @click="dialogRegisterVisible = true">没有账号？点击注册</div>
             <!-- 登录按钮 -->
             <el-form-item>
               <el-button
@@ -461,14 +453,12 @@ async function register() {
                     class="captcha"
                     alt="点击重新加载"
                     @click="refreshCaptcha"
-                  >
+                  />
                 </template>
               </el-input>
             </el-form-item>
 
-            <div class="register" @click="dialogRegisterVisible = true">
-              没有账号？点击注册
-            </div>
+            <div class="register" @click="dialogRegisterVisible = true">没有账号？点击注册</div>
 
             <el-form-item>
               <el-button
@@ -483,25 +473,17 @@ async function register() {
           </el-form>
           <!-- 其他登录方式 -->
           <div class="other">
-            <div class="otherLogin">
-              更多方式
-            </div>
-            <div style="margin-top: 0.0429rem">
-              @@
-            </div>
+            <div class="otherLogin">更多方式</div>
+            <div style="margin-top: 0.0429rem">@@</div>
           </div>
           <!-- 底部说明 -->
           <div class="bottom">
-            <div class="explain">
-              登录视为您已同意第三方账号绑定协议、服务条款、隐私政策
-            </div>
+            <div class="explain">登录视为您已同意第三方账号绑定协议、服务条款、隐私政策</div>
           </div>
         </div>
         <!-- 背景图盒子 -->
         <div class="image_bg">
-          <div v-show="dialogRegisterVisible" class="backLogin" @click="backLogin">
-            已有帐号？
-          </div>
+          <div v-show="dialogRegisterVisible" class="backLogin" @click="backLogin">已有帐号？</div>
         </div>
         <!-- 注册盒子 -->
         <div class="register_container">
@@ -528,11 +510,7 @@ async function register() {
               style="height: 2.5714rem"
             >
               <div v-if="activeStep === 0" class="Step3">
-                <el-form-item
-                  label="手机号"
-                  prop="phone"
-                  style="width: 5.4286rem"
-                >
+                <el-form-item label="手机号" prop="phone" style="width: 5.4286rem">
                   <el-input v-model="regForm.phone" placeholder="请设置手机号">
                     <template #prefix>
                       <el-icon>
@@ -541,15 +519,8 @@ async function register() {
                     </template>
                   </el-input>
                 </el-form-item>
-                <el-form-item
-                  label="验证码"
-                  prop="verifyCode"
-                  style="width: 5.4286rem"
-                >
-                  <el-input
-                    v-model="regForm.verifyCode"
-                    placeholder="请输入验证码"
-                  >
+                <el-form-item label="验证码" prop="verifyCode" style="width: 5.4286rem">
+                  <el-input v-model="regForm.verifyCode" placeholder="请输入验证码">
                     <template #prefix>
                       <el-icon>
                         <Bell />
@@ -560,8 +531,7 @@ async function register() {
                         v-show="!isAccLog"
                         size="small"
                         :disabled="
-                          isSendingCode['2'].value === true
-                            || (countdown['2'].value as number) > 0
+                          isSendingCode['2'].value === true || (countdown['2'].value as number) > 0
                         "
                         class="sendCode"
                         @click="() => sendVerificationCode('2')"
@@ -674,15 +644,8 @@ async function register() {
                       height: 2.019rem;
                     "
                   >
-                    <el-form-item
-                      label="用户名"
-                      prop="username"
-                      style="width: 5.4286rem"
-                    >
-                      <el-input
-                        v-model="regForm.username"
-                        placeholder="请设置用户名"
-                      >
+                    <el-form-item label="用户名" prop="username" style="width: 5.4286rem">
+                      <el-input v-model="regForm.username" placeholder="请设置用户名">
                         <template #prefix>
                           <el-icon>
                             <User />
@@ -690,15 +653,8 @@ async function register() {
                         </template>
                       </el-input>
                     </el-form-item>
-                    <el-form-item
-                      label="账号"
-                      prop="account"
-                      style="width: 5.4286rem"
-                    >
-                      <el-input
-                        v-model="regForm.account"
-                        placeholder="请设置账号"
-                      >
+                    <el-form-item label="账号" prop="account" style="width: 5.4286rem">
+                      <el-input v-model="regForm.account" placeholder="请设置账号">
                         <template #prefix>
                           <el-icon>
                             <Avatar />
@@ -710,22 +666,11 @@ async function register() {
                 </el-row>
               </div>
               <div class="stepBtn">
-                <el-button
-                  :disabled="activeStep === 0"
-                  type="primary"
-                  text
-                  @click="prev"
-                >
+                <el-button :disabled="activeStep === 0" type="primary" text @click="prev">
                   上一步
                 </el-button>
-                <el-button v-if="activeStep !== 2" type="primary" @click="next">
-                  下一步
-                </el-button>
-                <el-button
-                  v-if="activeStep === 2"
-                  type="primary"
-                  @click="register"
-                >
+                <el-button v-if="activeStep !== 2" type="primary" @click="next">下一步</el-button>
+                <el-button v-if="activeStep === 2" type="primary" @click="register">
                   确认注册
                 </el-button>
               </div>
