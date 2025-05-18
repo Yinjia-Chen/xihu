@@ -7,9 +7,17 @@ const useLayoutSettingStore = defineStore('settingStore', () => {
   const menuList = ref(constantRoutesPC[0].children)
   // 是否显示对话框
   const dialogFormVisible = ref(false)
+  // 是否显示注册对话框
+  const dialogRegisterVisible = ref(false)
+  // 是否登录
+  const isLog = ref(false)
+  const isLoading = ref(true)
   return {
     menuList,
     dialogFormVisible,
+    dialogRegisterVisible,
+    isLoading,
+    isLog,
   }
 })
 

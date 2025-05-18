@@ -33,11 +33,12 @@ const {
 
 // 使用 layoutSettingStore
 const layoutSettingStore = useLayoutSettingStore()
-let { dialogFormVisible, dialogRegisterVisible, isLog } = storeToRefs(layoutSettingStore)
+const { dialogFormVisible, dialogRegisterVisible, isLog } = storeToRefs(layoutSettingStore)
 
 const isAccLog = ref<boolean>(true)
 const logForm1 = ref()
 const logForm2 = ref()
+const registerForm = ref()
 
 // 图片验证码地址
 const captchaUrl = ref('http://8.130.145.109:8080/dev-api/captcha/get')
@@ -102,7 +103,8 @@ function validatorPassword(_rule: any, value: any, callback: any) {
 
   if (lengthCheck && lowercaseCheck && uppercaseCheck && numberCheck) {
     callback()
-  } else {
+  }
+  else {
     let errorMessage = '密码必须包含大写字母、小写字母和数字'
     if (!lengthCheck) {
       errorMessage = '密码长度应当为6-15位'
@@ -113,9 +115,11 @@ function validatorPassword(_rule: any, value: any, callback: any) {
 function validatePwdCheck(_rule: any, value: any, callback: any) {
   if (value === '') {
     callback(new Error('请再次输入密码'))
-  } else if (value !== regForm.password) {
+  }
+  else if (value !== regForm.password) {
     callback(new Error('两次输入密码不一致!'))
-  } else {
+  }
+  else {
     callback()
   }
 }
@@ -202,7 +206,8 @@ async function login() {
           type: 'error',
         })
       })
-  } else {
+  }
+  else {
     // 手机号登录
     await logForm2.value.validate()
     await phoneLogin(phoneLogForm)
@@ -224,6 +229,66 @@ async function login() {
         })
       })
   }
+}
+
+// 关闭登录窗口
+function closeLogin() {
+  dialogRegisterVisible.value = false
+}
+
+// 回到登陆
+function backLogin() {
+  dialogRegisterVisible.value = false
+}
+
+// 注册步骤记录
+const activeStep = ref(0)
+
+// 注册表单校验
+const rules3 = {
+  username: [{ validator: validatorUsername, trigger: 'change' }],
+  account: [{ validator: validatorAccount, trigger: 'change' }],
+  phone: [{ validator: validatorPhone, trigger: 'change' }],
+  verifyCode: [{ validator: validatorVerifyCode, trigger: 'blur' }],
+  password: [{ trigger: 'change', validator: validatorPassword }],
+  checkPwd: [{ trigger: 'change', validator: validatePwdCheck }],
+}
+
+// 注册->上一步
+function prev() {
+  if (activeStep.value > 0) {
+    activeStep.value--
+  }
+}
+
+// 注册->下一步
+function next() {
+  if (activeStep.value < 2) {
+    registerForm.value.validate((valid: any) => {
+      if (valid) {
+        activeStep.value++
+      }
+    })
+  }
+}
+
+// 注册按钮回调
+async function register() {
+  await registerForm.value.validate()
+  registerAcc(regForm)
+    .then(() => {
+      dialogRegisterVisible.value = false
+      ElMessage({
+        message: '注册成功',
+        type: 'success',
+      })
+    })
+    .catch((err) => {
+      ElMessage({
+        message: `注册失败，${err.message}`,
+        type: 'error',
+      })
+    })
 }
 </script>
 
@@ -262,12 +327,17 @@ async function login() {
       "
       @close="closeLogin"
     >
-      <!-- 登陆盒子 -->
-      <div class="login_wrapper login-wrapper-show">
+      <div
+        class="login_wrapper"
+        :class="dialogRegisterVisible === true ? 'register-wrapper-show' : 'login-wrapper-show'"
+      >
+        <!-- 登陆盒子 -->
         <div class="login_container">
           <!-- 头部 -->
           <div class="header">
-            <div class="title">西湖论剑·数字安全大会</div>
+            <div class="title">
+              西湖论剑·数字安全大会
+            </div>
             <div class="login">
               <span :class="{ login1: isAccLog }" @click="isAccLog = true">账号</span>
               <span :class="{ login2: !isAccLog }" @click="isAccLog = false">手机号</span>
@@ -317,11 +387,13 @@ async function login() {
                     class="captcha"
                     alt="点击重新加载"
                     @click="refreshCaptcha"
-                  />
+                  >
                 </template>
               </el-input>
             </el-form-item>
-            <div class="register" @click="dialogRegisterVisible = true">没有账号？点击注册</div>
+            <div class="register" @click="dialogRegisterVisible = true">
+              没有账号？点击注册
+            </div>
             <!-- 登录按钮 -->
             <el-form-item>
               <el-button
@@ -389,12 +461,14 @@ async function login() {
                     class="captcha"
                     alt="点击重新加载"
                     @click="refreshCaptcha"
-                  />
+                  >
                 </template>
               </el-input>
             </el-form-item>
 
-            <div class="register" @click="dialogRegisterVisible = true">没有账号？点击注册</div>
+            <div class="register" @click="dialogRegisterVisible = true">
+              没有账号？点击注册
+            </div>
 
             <el-form-item>
               <el-button
@@ -407,10 +481,256 @@ async function login() {
               </el-button>
             </el-form-item>
           </el-form>
+          <!-- 其他登录方式 -->
+          <div class="other">
+            <div class="otherLogin">
+              更多方式
+            </div>
+            <div style="margin-top: 0.0429rem">
+              @@
+            </div>
+          </div>
+          <!-- 底部说明 -->
+          <div class="bottom">
+            <div class="explain">
+              登录视为您已同意第三方账号绑定协议、服务条款、隐私政策
+            </div>
+          </div>
         </div>
         <!-- 背景图盒子 -->
         <div class="image_bg">
-          <div v-show="dialogRegisterVisible" class="backLogin" @click="backLogin">已有帐号？</div>
+          <div v-show="dialogRegisterVisible" class="backLogin" @click="backLogin">
+            已有帐号？
+          </div>
+        </div>
+        <!-- 注册盒子 -->
+        <div class="register_container">
+          <div class="register-header">
+            <span style="margin-right: 0.0714rem">注册用户</span>
+          </div>
+          <div class="regisnter-content">
+            <el-steps
+              :active="activeStep"
+              finish-status="success"
+              align-center
+              style="margin-top: 0.1875rem"
+            >
+              <el-step title="手机号" />
+              <el-step title="密码" />
+              <el-step title="基本信息" />
+            </el-steps>
+            <el-form
+              ref="registerForm"
+              label-position="right"
+              label-width="1.0714rem"
+              :model="regForm"
+              :rules="rules3"
+              style="height: 2.5714rem"
+            >
+              <div v-if="activeStep === 0" class="Step3">
+                <el-form-item
+                  label="手机号"
+                  prop="phone"
+                  style="width: 5.4286rem"
+                >
+                  <el-input v-model="regForm.phone" placeholder="请设置手机号">
+                    <template #prefix>
+                      <el-icon>
+                        <Phone />
+                      </el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+                <el-form-item
+                  label="验证码"
+                  prop="verifyCode"
+                  style="width: 5.4286rem"
+                >
+                  <el-input
+                    v-model="regForm.verifyCode"
+                    placeholder="请输入验证码"
+                  >
+                    <template #prefix>
+                      <el-icon>
+                        <Bell />
+                      </el-icon>
+                    </template>
+                    <template #suffix>
+                      <el-button
+                        v-show="!isAccLog"
+                        size="small"
+                        :disabled="
+                          isSendingCode['2'].value === true
+                            || (countdown['2'].value as number) > 0
+                        "
+                        class="sendCode"
+                        @click="() => sendVerificationCode('2')"
+                      >
+                        {{
+                          (countdown['2'].value as number) > 0
+                            ? `重新发送(${countdown['2'].value})`
+                            : '发送验证码'
+                        }}
+                      </el-button>
+                    </template>
+                  </el-input>
+                </el-form-item>
+              </div>
+
+              <div
+                v-if="activeStep === 1"
+                class="Step2"
+                style="
+                  height: 2.019rem;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                "
+              >
+                <el-form-item
+                  label="密码"
+                  prop="password"
+                  style="width: 5.4286rem"
+                  label-width="1.25rem"
+                >
+                  <el-input
+                    v-model="regForm.password"
+                    placeholder="请设置密码"
+                    type="password"
+                    show-password
+                  >
+                    <template #prefix>
+                      <el-icon>
+                        <Key />
+                      </el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+                <el-form-item
+                  label="确认密码"
+                  prop="checkPwd"
+                  style="width: 5.4286rem"
+                  label-width="1.25rem"
+                >
+                  <el-input
+                    v-model="regForm.checkPwd"
+                    placeholder="请再次输入密码"
+                    show-password
+                    type="password"
+                  >
+                    <template #prefix>
+                      <el-icon>
+                        <Key />
+                      </el-icon>
+                    </template>
+                  </el-input>
+                </el-form-item>
+              </div>
+              <div v-if="activeStep === 2" class="Step1">
+                <!-- 上传头像 -->
+                <el-row>
+                  <!-- <el-col
+                    :span="8.5"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      margin-bottom: 0.1875rem;
+                    "
+                  >
+                    <div
+                      style="
+                        margin-right: 0.2143rem;
+                        font-size: 0.2286rem;
+                        margin-left: 0.375rem;
+                      "
+                    >
+                      头像
+                    </div>
+                    <el-upload
+                      class="avatar-uploader"
+                      action="/dev-api/upload"
+                      :show-file-list="false"
+                      :on-success="handleAvatarSuccess"
+                      :before-upload="beforeAvatarUpload"
+                    >
+                      <img
+                        v-if="regForm.avatar"
+                        :src="regForm.avatar"
+                        class="avatar"
+                      />
+                      <el-icon v-else class="avatar-uploader-icon">
+                        <Plus />
+                      </el-icon>
+                    </el-upload>
+                  </el-col> -->
+                  <el-col
+                    :span="12.5"
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      align-items: center;
+                      height: 2.019rem;
+                    "
+                  >
+                    <el-form-item
+                      label="用户名"
+                      prop="username"
+                      style="width: 5.4286rem"
+                    >
+                      <el-input
+                        v-model="regForm.username"
+                        placeholder="请设置用户名"
+                      >
+                        <template #prefix>
+                          <el-icon>
+                            <User />
+                          </el-icon>
+                        </template>
+                      </el-input>
+                    </el-form-item>
+                    <el-form-item
+                      label="账号"
+                      prop="account"
+                      style="width: 5.4286rem"
+                    >
+                      <el-input
+                        v-model="regForm.account"
+                        placeholder="请设置账号"
+                      >
+                        <template #prefix>
+                          <el-icon>
+                            <Avatar />
+                          </el-icon>
+                        </template>
+                      </el-input>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+              <div class="stepBtn">
+                <el-button
+                  :disabled="activeStep === 0"
+                  type="primary"
+                  text
+                  @click="prev"
+                >
+                  上一步
+                </el-button>
+                <el-button v-if="activeStep !== 2" type="primary" @click="next">
+                  下一步
+                </el-button>
+                <el-button
+                  v-if="activeStep === 2"
+                  type="primary"
+                  @click="register"
+                >
+                  确认注册
+                </el-button>
+              </div>
+            </el-form>
+          </div>
         </div>
       </div>
     </el-dialog>
