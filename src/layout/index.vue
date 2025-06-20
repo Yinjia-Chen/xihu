@@ -1,311 +1,15 @@
-<script setup lang="ts">
-import type { Ref } from 'vue'
-// 引入 userStore
-import useUserStore from '@/store/modules/user'
-// 引入 layoutSettingStore
-import useLayoutSettingStore from '@/store/setting'
-// 引入 登录成功后的 早中晚
-import time from '@/utils/time'
-// 引入 element-plus 组件
-import { ElMessage, ElNotification } from 'element-plus'
-import { storeToRefs } from 'pinia'
-import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-// 引入子组件
-import Footer from './footer/index.vue'
-import Main from './main/index.vue'
-import Sidebar from './sidebar/index.vue'
-import Tabbar from './tabbar/index.vue'
-
-// 使用 userStore
-const userStore = useUserStore()
-const {
-  accLogForm,
-  phoneLogForm,
-  regForm,
-  userData,
-  accLogin,
-  phoneLogin,
-  registerAcc,
-  clearLogForm,
-  clearRegForm,
-} = userStore
-
-// 使用 layoutSettingStore
-const layoutSettingStore = useLayoutSettingStore()
-const { dialogFormVisible, dialogRegisterVisible, isLog } = storeToRefs(layoutSettingStore)
-
-const isAccLog = ref<boolean>(true)
-const logForm1 = ref()
-const logForm2 = ref()
-const registerForm = ref()
-
-// 图片验证码地址
-const captchaUrl = ref('http://8.130.145.109:8080/dev-api/captcha/get')
-function refreshCaptcha() {
-  const timestamp = new Date().getTime()
-  captchaUrl.value = `http://8.130.145.109:8080/dev-api/captcha/get?timestamp=${timestamp}`
-}
-
-// 创建响应式对象,检查验证码发送状态,记录倒计时
-interface RefObject {
-  [key: string]: Ref<number> | Ref<boolean>
-}
-const isSendingCode: RefObject = {
-  1: ref(false),
-  2: ref(false),
-}
-const countdown: RefObject = {
-  1: ref(0),
-  2: ref(0),
-}
-
-// 发送验证码，调验证码接口
-function sendVerificationCode(num: string) {
-  // 检查手机号是否有效
-  isSendingCode[num].value = true
-  countdown[num].value = 60
-  // 倒计时效果
-  const countdownInterval = setInterval(() => {
-    ;(countdown[num].value as number)--
-    if ((countdown[num].value as number) <= 0) {
-      clearInterval(countdownInterval)
-      isSendingCode[num].value = false
-    }
-  }, 1000)
-}
-
-// 清空表单并刷新验证码
-watch(isAccLog, () => {
-  clearLogForm()
-  refreshCaptcha()
-})
-watch(dialogFormVisible, () => {
-  clearLogForm()
-  if (dialogFormVisible.value === true) {
-    refreshCaptcha()
-  }
-})
-watch(dialogRegisterVisible, () => {
-  clearRegForm()
-  refreshCaptcha()
-})
-
-// 表单校验判断及处理函数
-function validatorPassword(_rule: any, value: any, callback: any) {
-  if (!value) {
-    return callback(new Error('请输入密码'))
-  }
-  const lengthCheck = value.length >= 6 && value.length <= 15
-  const lowercaseCheck = /[a-z]/.test(value)
-  const uppercaseCheck = /[A-Z]/.test(value)
-  const numberCheck = /\d/.test(value)
-
-  if (lengthCheck && lowercaseCheck && uppercaseCheck && numberCheck) {
-    callback()
-  } else {
-    let errorMessage = '密码必须包含大写字母、小写字母和数字'
-    if (!lengthCheck) {
-      errorMessage = '密码长度应当为6-15位'
-    }
-    callback(new Error(errorMessage))
-  }
-}
-function validatePwdCheck(_rule: any, value: any, callback: any) {
-  if (value === '') {
-    callback(new Error('请再次输入密码'))
-  } else if (value !== regForm.password) {
-    callback(new Error('两次输入密码不一致!'))
-  } else {
-    callback()
-  }
-}
-function validatorAccount(_rule: any, value: any, callback: any) {
-  // 检查是否输入了值
-  if (!value) {
-    return callback(new Error('请输入账号'))
-  }
-  // 检查长度限制
-  if (value.length < 5 || value.length > 10) {
-    return callback(new Error('账号名长度在5-10位'))
-  }
-  // 检查是否包含特殊字符或中文
-  if (!/^[a-z0-9]+$/i.test(value)) {
-    return callback(new Error('账号名不能包含特殊字符或中文'))
-  }
-  // 如果所有检查都通过，则调用 callback() 无参数表示验证通过
-  callback()
-}
-function validatorCaptcha(_rule: any, value: any, callback: any) {
-  if (!value) {
-    return callback(new Error('请输入图形验证码'))
-  }
-  if (value.length !== 4) {
-    return callback(new Error('验证码长度为4'))
-  }
-  callback()
-}
-function validatorPhone(_rule: any, value: any, callback: any) {
-  if (!value) {
-    return callback(new Error('请输入手机号'))
-  }
-  if (value.length !== 11) {
-    return callback(new Error('手机号长度为11位'))
-  }
-  callback()
-}
-function validatorVerifyCode(_rule: any, value: any, callback: any) {
-  if (!value) {
-    return callback(new Error('请输入短信验证码'))
-  }
-  callback()
-}
-function validatorUsername(_rule: any, value: any, callback: any) {
-  if (!value) {
-    return callback(new Error('用户名不能为空'))
-  }
-  callback()
-}
-
-// 登录表单校验
-const rules1 = {
-  account: [{ validator: validatorAccount, trigger: 'change' }],
-  password: [{ trigger: 'change', validator: validatorPassword }],
-  captcha: [{ trigger: 'blur', validator: validatorCaptcha }],
-}
-const rules2 = {
-  phone: [{ validator: validatorPhone, trigger: 'change' }],
-  verifyCode: [{ validator: validatorVerifyCode, trigger: 'blur' }],
-  captcha: [{ trigger: 'blur', validator: validatorCaptcha }],
-}
-
-const $router = useRouter()
-
-// 登陆逻辑
-async function login() {
-  if (isAccLog.value) {
-    // 账号登录
-    await logForm1.value.validate()
-    await accLogin(accLogForm)
-      .then(() => {
-        dialogFormVisible.value = false
-        ElNotification({
-          title: `hi! ${userData.username},${time()}好`,
-          message: '欢迎登录',
-        })
-        isLog.value = true
-        $router.push('/home')
-      })
-      .catch((error) => {
-        // 登录失败的通知
-        ElMessage({
-          message: `${error.message}`,
-          type: 'error',
-        })
-      })
-  } else {
-    // 手机号登录
-    await logForm2.value.validate()
-    await phoneLogin(phoneLogForm)
-      .then(() => {
-        // 显示通知
-        dialogFormVisible.value = false
-        ElNotification({
-          title: `hi! ${userData.username},${time()}好`,
-          message: '欢迎登录',
-          type: 'success',
-        })
-        isLog.value = true
-      })
-      .catch((error) => {
-        // 登录失败的通知
-        ElMessage({
-          message: `${error.message}`,
-          type: 'error',
-        })
-      })
-  }
-}
-
-// 关闭登录窗口
-function closeLogin() {
-  dialogRegisterVisible.value = false
-}
-
-// 回到登陆
-function backLogin() {
-  dialogRegisterVisible.value = false
-}
-
-// 注册步骤记录
-const activeStep = ref(0)
-
-// 注册表单校验
-const rules3 = {
-  username: [{ validator: validatorUsername, trigger: 'change' }],
-  account: [{ validator: validatorAccount, trigger: 'change' }],
-  phone: [{ validator: validatorPhone, trigger: 'change' }],
-  verifyCode: [{ validator: validatorVerifyCode, trigger: 'blur' }],
-  password: [{ trigger: 'change', validator: validatorPassword }],
-  checkPwd: [{ trigger: 'change', validator: validatePwdCheck }],
-}
-
-// 注册->上一步
-function prev() {
-  if (activeStep.value > 0) {
-    activeStep.value--
-  }
-}
-
-// 注册->下一步
-function next() {
-  if (activeStep.value < 2) {
-    registerForm.value.validate((valid: any) => {
-      if (valid) {
-        activeStep.value++
-      }
-    })
-  }
-}
-
-// 注册按钮回调
-async function register() {
-  await registerForm.value.validate()
-  registerAcc(regForm)
-    .then(() => {
-      dialogRegisterVisible.value = false
-      ElMessage({
-        message: '注册成功',
-        type: 'success',
-      })
-    })
-    .catch((err) => {
-      ElMessage({
-        message: `注册失败，${err.message}`,
-        type: 'error',
-      })
-    })
-}
-</script>
-
 <template>
   <div class="layout">
-    <!-- 顶栏 -->
-    <Tabbar class="tabbar" />
+    <!-- 顶部导航栏 -->
+    <Tabbar class="tabbar"></Tabbar>
 
-    <!-- 主体 -->
-    <Main class="main" />
+    <Main class="main"></Main>
 
-    <!-- 侧栏 -->
-    <Sidebar class="sidebar" />
-
-    <!-- 底栏 -->
-    <Footer class="footer" />
-
-    <!-- 注册｜登陆 对话框 -->
+    <Sidebar class="sidebar"></Sidebar>
+    <Footer class="footer"></Footer>
     <el-dialog
-      v-model="dialogFormVisible"
       class="dialog"
+      v-model="dialogFormVisible"
       width="14.5rem"
       :show-close="false"
       style="
@@ -325,28 +29,35 @@ async function register() {
     >
       <div
         class="login_wrapper"
-        :class="dialogRegisterVisible === true ? 'register-wrapper-show' : 'login-wrapper-show'"
+        :class="
+          dialogRegisterVisible === true
+            ? 'register-wrapper-show'
+            : 'login-wrapper-show'
+        "
       >
-        <!-- 登陆盒子 -->
         <div class="login_container">
           <!-- 头部 -->
           <div class="header">
             <div class="title">西湖论剑·数字安全大会</div>
             <div class="login">
-              <span :class="{ login1: isAccLog }" @click="isAccLog = true">账号</span>
-              <span :class="{ login2: !isAccLog }" @click="isAccLog = false">手机号</span>
+              <span :class="{ login1: isAccLog }" @click="isAccLog = true">
+                账号
+              </span>
+              <span :class="{ login2: !isAccLog }" @click="isAccLog = false">
+                手机号
+              </span>
             </div>
           </div>
           <!-- 账号登录表单 -->
           <el-form
-            v-show="isAccLog"
-            ref="logForm1"
             label-width=".3571rem"
+            v-show="isAccLog"
             :rules="rules1"
             :model="accLogForm"
+            ref="logForm1"
           >
             <el-form-item prop="account">
-              <el-input v-model="accLogForm.account" placeholder="请输入账号">
+              <el-input placeholder="请输入账号" v-model="accLogForm.account">
                 <template #prefix>
                   <el-icon>
                     <User />
@@ -356,10 +67,10 @@ async function register() {
             </el-form-item>
             <el-form-item prop="password">
               <el-input
-                v-model="accLogForm.password"
                 placeholder="请输入密码"
                 type="password"
                 show-password
+                v-model="accLogForm.password"
               >
                 <template #prefix>
                   <el-icon>
@@ -369,7 +80,7 @@ async function register() {
               </el-input>
             </el-form-item>
             <el-form-item style="margin-bottom: 0.0714rem" prop="captcha">
-              <el-input v-model="accLogForm.captcha" placeholder="请输入验证码">
+              <el-input placeholder="请输入验证码" v-model="accLogForm.captcha">
                 <template #prefix>
                   <el-icon>
                     <Key />
@@ -379,35 +90,40 @@ async function register() {
                   <img
                     :src="captchaUrl"
                     class="captcha"
-                    alt="点击重新加载"
                     @click="refreshCaptcha"
+                    alt="点击重新加载"
                   />
                 </template>
               </el-input>
             </el-form-item>
-            <div class="register" @click="dialogRegisterVisible = true">没有账号？点击注册</div>
+            <div class="register" @click="dialogRegisterVisible = true">
+              没有账号？点击注册
+            </div>
             <!-- 登录按钮 -->
             <el-form-item>
               <el-button
                 type="primary"
                 style="width: 4.7339rem; border-radius: 0.2429rem"
-                :loading="false"
                 @click="login"
+                :loading="false"
               >
                 登录
               </el-button>
             </el-form-item>
           </el-form>
-          <!-- 手机号登陆表单 -->
+          <!-- 手机号登录表单 -->
           <el-form
-            v-show="!isAccLog"
-            ref="logForm2"
             label-width=".3571rem"
             :rules="rules2"
             :model="phoneLogForm"
+            v-show="!isAccLog"
+            ref="logForm2"
           >
             <el-form-item prop="phone">
-              <el-input v-model="phoneLogForm.phone" placeholder="请输入手机号码">
+              <el-input
+                placeholder="请输入手机号码"
+                v-model="phoneLogForm.phone"
+              >
                 <template #prefix>
                   <el-icon>
                     <Iphone />
@@ -416,7 +132,10 @@ async function register() {
               </el-input>
             </el-form-item>
             <el-form-item prop="verifyCode">
-              <el-input v-model="phoneLogForm.verifyCode" placeholder="请输入短信验证码">
+              <el-input
+                placeholder="请输入短信验证码"
+                v-model="phoneLogForm.verifyCode"
+              >
                 <template #prefix>
                   <el-icon>
                     <Bell />
@@ -424,12 +143,13 @@ async function register() {
                 </template>
                 <template #suffix>
                   <el-button
+                    @click="() => sendVerificationCode('1')"
                     size="small"
                     :disabled="
-                      isSendingCode['1'].value === true || (countdown['1'].value as number) > 0
+                      isSendingCode['1'].value == true ||
+                      (countdown['1'].value as number) > 0
                     "
                     class="sendCode"
-                    @click="() => sendVerificationCode('1')"
                   >
                     {{
                       (countdown['1'].value as number) > 0
@@ -441,7 +161,10 @@ async function register() {
               </el-input>
             </el-form-item>
             <el-form-item style="margin-bottom: 0.0714rem" prop="captcha">
-              <el-input v-model="phoneLogForm.captcha" placeholder="请输入验证码">
+              <el-input
+                placeholder="请输入验证码"
+                v-model="phoneLogForm.captcha"
+              >
                 <template #prefix>
                   <el-icon>
                     <Key />
@@ -450,22 +173,24 @@ async function register() {
                 <template #suffix>
                   <img
                     :src="captchaUrl"
+                    @click="refreshCaptcha"
                     class="captcha"
                     alt="点击重新加载"
-                    @click="refreshCaptcha"
                   />
                 </template>
               </el-input>
             </el-form-item>
 
-            <div class="register" @click="dialogRegisterVisible = true">没有账号？点击注册</div>
-
+            <div class="register" @click="dialogRegisterVisible = true">
+              没有账号？点击注册
+            </div>
+            <!-- 登录按钮 -->
             <el-form-item>
               <el-button
                 type="primary"
                 style="width: 4.7339rem; border-radius: 0.2429rem"
-                :loading="false"
                 @click="login"
+                :loading="false"
               >
                 登录
               </el-button>
@@ -478,14 +203,20 @@ async function register() {
           </div>
           <!-- 底部说明 -->
           <div class="bottom">
-            <div class="explain">登录视为您已同意第三方账号绑定协议、服务条款、隐私政策</div>
+            <div class="explain">
+              登录视为您已同意第三方账号绑定协议、服务条款、隐私政策
+            </div>
           </div>
         </div>
-        <!-- 背景图盒子 -->
         <div class="image_bg">
-          <div v-show="dialogRegisterVisible" class="backLogin" @click="backLogin">已有帐号？</div>
+          <div
+            class="backLogin"
+            @click="backLogin"
+            v-show="dialogRegisterVisible"
+          >
+            已有帐号？
+          </div>
         </div>
-        <!-- 注册盒子 -->
         <div class="register_container">
           <div class="register-header">
             <span style="margin-right: 0.0714rem">注册用户</span>
@@ -502,16 +233,20 @@ async function register() {
               <el-step title="基本信息" />
             </el-steps>
             <el-form
-              ref="registerForm"
               label-position="right"
               label-width="1.0714rem"
               :model="regForm"
               :rules="rules3"
+              ref="registerForm"
               style="height: 2.5714rem"
             >
               <div v-if="activeStep === 0" class="Step3">
-                <el-form-item label="手机号" prop="phone" style="width: 5.4286rem">
-                  <el-input v-model="regForm.phone" placeholder="请设置手机号">
+                <el-form-item
+                  label="手机号"
+                  prop="phone"
+                  style="width: 5.4286rem"
+                >
+                  <el-input placeholder="请设置手机号" v-model="regForm.phone">
                     <template #prefix>
                       <el-icon>
                         <Phone />
@@ -519,8 +254,15 @@ async function register() {
                     </template>
                   </el-input>
                 </el-form-item>
-                <el-form-item label="验证码" prop="verifyCode" style="width: 5.4286rem">
-                  <el-input v-model="regForm.verifyCode" placeholder="请输入验证码">
+                <el-form-item
+                  label="验证码"
+                  prop="verifyCode"
+                  style="width: 5.4286rem"
+                >
+                  <el-input
+                    v-model="regForm.verifyCode"
+                    placeholder="请输入验证码"
+                  >
                     <template #prefix>
                       <el-icon>
                         <Bell />
@@ -529,12 +271,13 @@ async function register() {
                     <template #suffix>
                       <el-button
                         v-show="!isAccLog"
+                        @click="() => sendVerificationCode('2')"
                         size="small"
                         :disabled="
-                          isSendingCode['2'].value === true || (countdown['2'].value as number) > 0
+                          isSendingCode['2'].value == true ||
+                          (countdown['2'].value as number) > 0
                         "
                         class="sendCode"
-                        @click="() => sendVerificationCode('2')"
                       >
                         {{
                           (countdown['2'].value as number) > 0
@@ -565,10 +308,10 @@ async function register() {
                   label-width="1.25rem"
                 >
                   <el-input
-                    v-model="regForm.password"
                     placeholder="请设置密码"
                     type="password"
                     show-password
+                    v-model="regForm.password"
                   >
                     <template #prefix>
                       <el-icon>
@@ -584,10 +327,10 @@ async function register() {
                   label-width="1.25rem"
                 >
                   <el-input
-                    v-model="regForm.checkPwd"
                     placeholder="请再次输入密码"
                     show-password
                     type="password"
+                    v-model="regForm.checkPwd"
                   >
                     <template #prefix>
                       <el-icon>
@@ -644,8 +387,15 @@ async function register() {
                       height: 2.019rem;
                     "
                   >
-                    <el-form-item label="用户名" prop="username" style="width: 5.4286rem">
-                      <el-input v-model="regForm.username" placeholder="请设置用户名">
+                    <el-form-item
+                      label="用户名"
+                      prop="username"
+                      style="width: 5.4286rem"
+                    >
+                      <el-input
+                        placeholder="请设置用户名"
+                        v-model="regForm.username"
+                      >
                         <template #prefix>
                           <el-icon>
                             <User />
@@ -653,8 +403,15 @@ async function register() {
                         </template>
                       </el-input>
                     </el-form-item>
-                    <el-form-item label="账号" prop="account" style="width: 5.4286rem">
-                      <el-input v-model="regForm.account" placeholder="请设置账号">
+                    <el-form-item
+                      label="账号"
+                      prop="account"
+                      style="width: 5.4286rem"
+                    >
+                      <el-input
+                        placeholder="请设置账号"
+                        v-model="regForm.account"
+                      >
                         <template #prefix>
                           <el-icon>
                             <Avatar />
@@ -666,11 +423,22 @@ async function register() {
                 </el-row>
               </div>
               <div class="stepBtn">
-                <el-button :disabled="activeStep === 0" type="primary" text @click="prev">
+                <el-button
+                  :disabled="activeStep === 0"
+                  @click="prev"
+                  type="primary"
+                  text
+                >
                   上一步
                 </el-button>
-                <el-button v-if="activeStep !== 2" type="primary" @click="next">下一步</el-button>
-                <el-button v-if="activeStep === 2" type="primary" @click="register">
+                <el-button type="primary" @click="next" v-if="activeStep !== 2">
+                  下一步
+                </el-button>
+                <el-button
+                  v-if="activeStep === 2"
+                  type="primary"
+                  @click="register"
+                >
                   确认注册
                 </el-button>
               </div>
@@ -679,8 +447,324 @@ async function register() {
         </div>
       </div>
     </el-dialog>
+    <!-- 注册对话框 -->
   </div>
 </template>
+<script setup lang="ts">
+import { ref, Ref, watch } from 'vue'
+import { ElMessage, ElNotification } from 'element-plus'
+// import type { UploadProps } from 'element-plus'
+import time from '@/utils/time'
+
+// 引入主页面
+import Main from './main/index.vue'
+// 引入顶部导航
+import Tabbar from './tabbar/index.vue'
+// 引入页脚
+import Footer from './footer/index.vue'
+
+import Sidebar from './sidebar/index.vue'
+
+/* 路由相关 */
+import { useRouter } from 'vue-router'
+let $router = useRouter()
+
+/* pinia相关 */
+import useUserStore from '@/store/modules/user'
+import useLayoutSettingStore from '@/store/setting'
+let layoutSettingStore = useLayoutSettingStore()
+let userStore = useUserStore()
+import { storeToRefs } from 'pinia'
+let {
+  accLogForm,
+  phoneLogForm,
+  regForm,
+  userData,
+  accLogin,
+  phoneLogin,
+  registerAcc,
+  clearLogForm,
+  clearRegForm,
+} = userStore
+let { dialogFormVisible, dialogRegisterVisible, isLog } =
+  storeToRefs(layoutSettingStore)
+
+/* 图片验证码 */
+let captchaUrl = ref('http://8.130.145.109:8080/dev-api/captcha/get')
+function refreshCaptcha() {
+  const timestamp = new Date().getTime()
+  captchaUrl.value = `http://8.130.145.109:8080/dev-api/captcha/get?timestamp=${timestamp}`
+}
+
+let isAccLog = ref<boolean>(true)
+
+let logForm1 = ref()
+let logForm2 = ref()
+let registerForm = ref()
+
+interface RefObject {
+  [key: string]: Ref<number> | Ref<boolean>
+}
+let isSendingCode: RefObject = {
+  1: ref(false),
+  2: ref(false),
+}
+let countdown: RefObject = {
+  1: ref(0),
+  2: ref(0),
+}
+
+// 发送验证码，调验证码接口
+const sendVerificationCode = (num: string) => {
+  // 检查手机号是否有效
+  isSendingCode[num].value = true
+  countdown[num].value = 60
+  // 倒计时效果
+  const countdownInterval = setInterval(() => {
+    ;(countdown[num].value as number)--
+    if ((countdown[num].value as number) <= 0) {
+      clearInterval(countdownInterval)
+      isSendingCode[num].value = false
+    }
+  }, 1000)
+}
+
+// 清空表单并刷新验证码
+watch(isAccLog, () => {
+  clearLogForm()
+  refreshCaptcha()
+})
+watch(dialogFormVisible, () => {
+  clearLogForm()
+  if (dialogFormVisible.value == true) {
+    refreshCaptcha()
+  }
+})
+watch(dialogRegisterVisible, () => {
+  clearRegForm()
+  refreshCaptcha()
+})
+
+/* 表单校验 */
+const validatorPassword = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    return callback(new Error('请输入密码'))
+  }
+  const lengthCheck = value.length >= 6 && value.length <= 15
+  const lowercaseCheck = /[a-z]/.test(value)
+  const uppercaseCheck = /[A-Z]/.test(value)
+  const numberCheck = /\d/.test(value)
+
+  if (lengthCheck && lowercaseCheck && uppercaseCheck && numberCheck) {
+    callback()
+  } else {
+    let errorMessage = '密码必须包含大写字母、小写字母和数字'
+    if (!lengthCheck) {
+      errorMessage = '密码长度应当为6-15位'
+    }
+    callback(new Error(errorMessage))
+  }
+}
+const validatePwdCheck = (_rule: any, value: any, callback: any) => {
+  if (value === '') {
+    callback(new Error('请再次输入密码'))
+  } else if (value !== regForm.password) {
+    callback(new Error('两次输入密码不一致!'))
+  } else {
+    callback()
+  }
+}
+const validatorAccount = (_rule: any, value: any, callback: any) => {
+  // 检查是否输入了值
+  if (!value) {
+    return callback(new Error('请输入账号'))
+  }
+  // 检查长度限制
+  if (value.length < 5 || value.length > 10) {
+    return callback(new Error('账号名长度在5-10位'))
+  }
+  // 检查是否包含特殊字符或中文
+  if (!/^[a-zA-Z0-9]+$/.test(value)) {
+    return callback(new Error('账号名不能包含特殊字符或中文'))
+  }
+  // 如果所有检查都通过，则调用 callback() 无参数表示验证通过
+  callback()
+}
+const validatorCaptcha = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    return callback(new Error('请输入图形验证码'))
+  }
+  if (value.length != 4) {
+    return callback(new Error('验证码长度为4'))
+  }
+  callback()
+}
+const validatorPhone = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    return callback(new Error('请输入手机号'))
+  }
+  if (value.length != 11) {
+    return callback(new Error('手机号长度为11位'))
+  }
+  callback()
+}
+const validatorVerifyCode = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    return callback(new Error('请输入短信验证码'))
+  }
+  callback()
+}
+const validatorUsername = (_rule: any, value: any, callback: any) => {
+  if (!value) {
+    return callback(new Error('用户名不能为空'))
+  }
+  callback()
+}
+// 登录表单校验
+const rules1 = {
+  account: [{ validator: validatorAccount, trigger: 'change' }],
+  password: [{ trigger: 'change', validator: validatorPassword }],
+  captcha: [{ trigger: 'blur', validator: validatorCaptcha }],
+}
+const rules2 = {
+  phone: [{ validator: validatorPhone, trigger: 'change' }],
+  verifyCode: [{ validator: validatorVerifyCode, trigger: 'blur' }],
+  captcha: [{ trigger: 'blur', validator: validatorCaptcha }],
+}
+// 注册表单校验
+const rules3 = {
+  username: [{ validator: validatorUsername, trigger: 'change' }],
+  account: [{ validator: validatorAccount, trigger: 'change' }],
+  phone: [{ validator: validatorPhone, trigger: 'change' }],
+  verifyCode: [{ validator: validatorVerifyCode, trigger: 'blur' }],
+  password: [{ trigger: 'change', validator: validatorPassword }],
+  checkPwd: [{ trigger: 'change', validator: validatePwdCheck }],
+}
+// 上传图片组件->上传图片之前触发的钩子函数
+// const beforeAvatarUpload: UploadProps['beforeUpload'] = (rawFile) => {
+//   // 钩子是在图片上传成功之前触发，上传文件之前可以约束文件的大小
+//   // 要求：上传文件格式png|jpg|gif 4M
+//   if (
+//     rawFile.type == 'image/png' ||
+//     rawFile.type == 'image/jpeg' ||
+//     rawFile.type == 'image/gif'
+//   ) {
+//     if (rawFile.size / 1024 / 1024 < 4) {
+//       return true
+//     } else {
+//       ElMessage({
+//         type: 'error',
+//         message: '上传图片大小不能超过 4MB!',
+//       })
+//       return false
+//     }
+//   } else {
+//     ElMessage({
+//       type: 'error',
+//       message: '上传图片只能是 png、jpg、gif 格式之一！',
+//     })
+//     return false
+//   }
+// }
+// 图片上传成功之后的钩子
+// const handleAvatarSuccess: UploadProps['onSuccess'] = (response) => {
+//   // response:即为上传图片post请求服务器返回的数据
+//   regForm.avatar = response
+//   console.log(regForm)
+
+//   // 图片上传成功，清除对应图片校验结果
+//   registerForm.value.clearValidate()
+// }
+
+// 登录
+const login = async () => {
+  if (isAccLog.value) {
+    // 账号登录
+    await logForm1.value.validate()
+    await accLogin(accLogForm)
+      .then(() => {
+        dialogFormVisible.value = false
+        ElNotification({
+          title: `hi! ${userData.username},${time()}好`,
+          message: '欢迎登录',
+          type: 'success',
+        })
+        isLog.value = true
+        $router.push('/home')
+      })
+      .catch((error) => {
+        // 登录失败的通知
+        ElMessage({
+          message: `${error.message}`,
+          type: 'error',
+        })
+      })
+  } else {
+    // 手机号登录
+    await logForm2.value.validate()
+    await phoneLogin(phoneLogForm)
+      .then(() => {
+        // 显示通知
+        dialogFormVisible.value = false
+        ElNotification({
+          title: `hi! ${userData.username},${time()}好`,
+          message: '欢迎登录',
+          type: 'success',
+        })
+        isLog.value = true
+      })
+      .catch((error) => {
+        // 登录失败的通知
+        ElMessage({
+          message: `${error.message}`,
+          type: 'error',
+        })
+      })
+  }
+}
+//回到登录
+const backLogin = () => {
+  dialogRegisterVisible.value = false
+}
+const activeStep = ref(0)
+const next = () => {
+  if (activeStep.value < 2) {
+    registerForm.value.validate((valid: any) => {
+      if (valid) {
+        activeStep.value++
+      }
+    })
+  }
+}
+
+const prev = () => {
+  if (activeStep.value > 0) {
+    activeStep.value--
+  }
+}
+// 注册
+const register = async () => {
+  await registerForm.value.validate()
+  registerAcc(regForm)
+    .then(() => {
+      dialogRegisterVisible.value = false
+      ElMessage({
+        message: '注册成功',
+        type: 'success',
+      })
+    })
+    .catch((err) => {
+      ElMessage({
+        message: `注册失败，${err.message}`,
+        type: 'error',
+      })
+    })
+}
+//关闭登录窗口
+const closeLogin = () => {
+  dialogRegisterVisible.value = false
+}
+</script>
 
 <style scoped lang="scss">
 .layout {
@@ -715,7 +799,8 @@ async function register() {
   }
 
   .header {
-    margin: calc(1.0857rem - 0.5429rem - 0.2571rem) calc(1.6rem - 0.8571rem - 0.2857rem) 0.3214rem;
+    margin: calc(1.0857rem - 0.5429rem - 0.2571rem)
+      calc(1.6rem - 0.8571rem - 0.2857rem) 0.3214rem;
 
     .title {
       font-weight: bold;
@@ -939,7 +1024,6 @@ div[class^='Step'] {
   color: rgb(52, 158, 250);
 }
 </style>
-
 <style>
 .avatar-uploader .el-upload {
   border: 0.0143rem dashed var(--el-border-color);

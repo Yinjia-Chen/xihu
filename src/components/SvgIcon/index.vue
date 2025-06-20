@@ -1,23 +1,26 @@
-<script setup lang="ts">
+<template>
+  <!-- 测试SVG图标使用 -->
+  <svg :style="{ width, height }">
+    <!-- xlink:href 为 svg 中的 id -->
+    <use :xlink:href="prefix + name" :fill="color"></use>
+  </svg>
+</template>
+
+<script lang="ts" setup>
 defineProps({
-  // xlink:href属性值的前缀
   prefix: {
     type: String,
     default: '#icon-',
   },
-  // svg矢量图的名字
   name: String,
-  // svg图标的颜色
   color: {
     type: String,
     default: '',
   },
-  // svg宽度
   width: {
     type: String,
     default: '16px',
   },
-  // svg高度
   height: {
     type: String,
     default: '16px',
@@ -25,12 +28,4 @@ defineProps({
 })
 </script>
 
-<template>
-  <div>
-    <svg :style="{ width, height }">
-      <use :xlink:href="prefix + name" :fill="color" />
-    </svg>
-  </div>
-</template>
-
-<style scoped></style>
+<style></style>

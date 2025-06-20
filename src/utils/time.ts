@@ -1,7 +1,7 @@
 // 封装函数：获取早上|下午|晚上
 export default () => {
   let message = ''
-  const hours = new Date().getHours()
+  let hours = new Date().getHours()
   if (hours <= 9) {
     message = '早上'
   } else if (hours <= 12) {

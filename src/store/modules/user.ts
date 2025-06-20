@@ -1,23 +1,24 @@
-import type { accountLogData, phoneLogData, registerData, userData } from '@/api/user/type'
-
-import {
-  reqAccLogin,
-  reqLogout,
-  reqPhoneLogin,
-  reqRegister,
-  reqUpdateUser,
-  reqUserInfo,
-} from '@/api/user'
-
-import { GET_TOKEN, REMOVE_TOKEN, SET_TOKEN } from '@/utils/token'
 // layout 相关配置仓库
 import { defineStore } from 'pinia'
-import { reactive, ref } from 'vue'
-
-// 创建用户小仓库
-const useUserStore = defineStore('UserStore', () => {
-  const token = ref(GET_TOKEN())
-
+import { ref, reactive } from 'vue'
+import { GET_TOKEN, SET_TOKEN, REMOVE_TOKEN } from '@/utils/token'
+import {
+  reqAccLogin,
+  reqUserInfo,
+  reqPhoneLogin,
+  reqRegister,
+  reqLogout,
+  reqUpdateUser,
+} from '@/api/user'
+import {
+  accountLogData,
+  phoneLogData,
+  registerData,
+  userData,
+} from '@/api/user/type'
+let useUserStore = defineStore('userStore', () => {
+  // 小仓库存储数据的地方
+  let token = ref(GET_TOKEN())
   /* 表单收集数据 */
   // 账号登录表单收集数据
   const accLogForm: accountLogData = reactive({
@@ -132,8 +133,8 @@ const useUserStore = defineStore('UserStore', () => {
   // 检测是否登录
   const userInfo = async () => {
     if (token) {
-      const res = await reqUserInfo()
-      if (res.code === 0) {
+      let res = await reqUserInfo()
+      if (res.code == 0) {
         Object.assign(userData, res.data)
         return 'ok'
       } else {
@@ -153,8 +154,8 @@ const useUserStore = defineStore('UserStore', () => {
   }
   // 修改用户信息
   const updateUser = async () => {
-    const res = await reqUpdateUser(userData)
-    if (res.code === 0) {
+    let res = await reqUpdateUser(userData)
+    if (res.code == 0) {
       return 'ok'
     } else {
       return Promise.reject(new Error(res.msg))
@@ -192,5 +193,4 @@ const useUserStore = defineStore('UserStore', () => {
   }
 })
 
-// 对外暴露获取仓库的方法
 export default useUserStore

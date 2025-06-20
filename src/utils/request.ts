@@ -1,23 +1,30 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-// 创建axios实例
-const request = axios.create({
+import useUserStore from '@/store/modules/user'
+//创建axios实例
+let request = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API, // 开发环境
+  // baseURL: 'https://8.130.145.109:8080/dev-api/', // 生成环境
   timeout: 5000,
 })
-// 请求拦截器
+//请求拦截器
 request.interceptors.request.use((config) => {
+  //config 配置对象，headers属性请求头，经常给服务器携带公共参数
+  let userStore = useUserStore()
+  if (userStore.token) {
+    config.headers['Authorization'] = `${userStore.token}`
+  }
   return config
 })
-// 响应拦截器
+//响应拦截器
 request.interceptors.response.use(
   (response) => {
     return response.data
   },
   (error) => {
-    // 处理网络错误
+    //处理网络错误
     let msg = ''
-    const status = error.response.status
+    let status = error.response.status
     switch (status) {
       case 401:
         msg = 'token过期'

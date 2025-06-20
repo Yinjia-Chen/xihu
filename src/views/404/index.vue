@@ -1,7 +1,11 @@
-<script setup lang="ts"></script>
-
 <template>
-  <div>一级路由 404</div>
+  <div></div>
 </template>
 
-<style scoped></style>
+<script setup lang="ts"></script>
+<script lang="ts">
+export default {
+  name: '404',
+}
+</script>
+<style lang="scss" scoped></style>

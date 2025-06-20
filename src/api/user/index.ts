@@ -1,4 +1,5 @@
-import type {
+import request from '@/utils/request'
+import {
   accountLogData,
   logResponse,
   otherResponse,
@@ -6,7 +7,6 @@ import type {
   registerData,
   userData,
 } from './type'
-import request from '@/utils/request'
 
 enum API {
   USER_CHECK = '/user/Info',
@@ -21,21 +21,17 @@ enum API {
 }
 
 // 注册接口
-export function reqRegister(data: registerData) {
-  return request.post<any, otherResponse>(API.REGISTER, data)
-}
+export const reqRegister = (data: registerData) =>
+  request.post<any, otherResponse>(API.REGISTER, data)
 // 账号登录接口
-export function reqAccLogin(data: accountLogData) {
-  return request.post<any, logResponse>(API.ACCOUNT_LOGIN, data)
-}
+export const reqAccLogin = (data: accountLogData) =>
+  request.post<any, logResponse>(API.ACCOUNT_LOGIN, data)
 // 发送手机验证码接口
-export function reqSendMessage(data: number) {
-  return request.post<any, any>(API.SENDMESSAGE, data)
-}
+export const reqSendMessage = (data: number) =>
+  request.post<any, any>(API.SENDMESSAGE, data)
 // 手机号登录接口
-export function reqPhoneLogin(data: phoneLogData) {
-  return request.post<any, logResponse>(API.PHONE_LOGIN, data)
-}
+export const reqPhoneLogin = (data: phoneLogData) =>
+  request.post<any, logResponse>(API.PHONE_LOGIN, data)
 // 图形验证码获取接口
 export const reqCaptcha = () => request.get<any, any>(API.CAPTCHA)
 // 用户验证接口
@@ -43,6 +39,5 @@ export const reqUserInfo = () => request.get<any, any>(API.USER_CHECK)
 // 用户注销接口
 export const reqLogout = () => request.post<any, any>(API.USER_LOGOUT)
 // 用户修改信息接口
-export function reqUpdateUser(data: userData) {
-  return request.post<any, any>(API.USER_UPDATE, data)
-}
+export const reqUpdateUser = (data: userData) =>
+  request.post<any, any>(API.USER_UPDATE, data)

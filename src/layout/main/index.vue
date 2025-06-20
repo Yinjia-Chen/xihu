@@ -1,11 +1,3 @@
-<script setup lang="ts"></script>
-
-<script lang="ts">
-export default {
-  name: 'Main',
-}
-</script>
-
 <template>
   <!-- 路由组件出口的位置 -->
   <router-view v-slot="{ Component }">
@@ -15,6 +7,8 @@ export default {
     </transition>
   </router-view>
 </template>
+
+<script setup lang="ts"></script>
 
 <style scoped>
 .fade-enter-active {

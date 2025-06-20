@@ -1,22 +1,10 @@
-<script setup lang="ts">
-import setting from '@/setting'
-</script>
-
-<script lang="ts">
-export default {
-  name: 'Footer',
-}
-</script>
-
 <template>
   <div class="footer">
     <el-row class="row1">
-      <el-col :span="2" />
+      <el-col :span="2"></el-col>
       <el-col :span="5">
         <ul>
-          <li class="firli">
-            <a href="">指导单位</a>
-          </li>
+          <li class="firli"><a href="">指导单位</a></li>
           <li><a href="">浙江省互联网信息办公室</a></li>
           <li><a href="">浙江省经济与信息化厅</a></li>
           <li><a href="">浙江省公安厅</a></li>
@@ -26,17 +14,13 @@ export default {
       </el-col>
       <el-col :span="5">
         <ul>
-          <li class="firli">
-            <a href="">主办单位</a>
-          </li>
+          <li class="firli"><a href="">主办单位</a></li>
           <li><a href="">杭州市人民政府</a></li>
         </ul>
       </el-col>
       <el-col :span="5">
         <ul>
-          <li class="firli">
-            <a href="">联合主办单位</a>
-          </li>
+          <li class="firli"><a href="">联合主办单位</a></li>
           <li><a href="">中国信息通信研究院</a></li>
           <li><a href="">中国网络空间研究院</a></li>
           <li><a href="">国家工业信息安全发展研究中心</a></li>
@@ -47,9 +31,7 @@ export default {
       </el-col>
       <el-col :span="5">
         <ul>
-          <li class="firli">
-            <a href="">主办单位</a>
-          </li>
+          <li class="firli"><a href="">主办单位</a></li>
           <li><a href="">杭州市互联网信息办公室</a></li>
           <li><a href="">杭州市经济与信息化局</a></li>
           <li><a href="">杭州市公安局</a></li>
@@ -58,10 +40,10 @@ export default {
           <li><a href="">安恒信息</a></li>
         </ul>
       </el-col>
-      <el-col :span="2" />
+      <el-col :span="2"></el-col>
     </el-row>
     <el-row class="row2">
-      <el-col :span="2" />
+      <el-col :span="2"></el-col>
       <el-col :span="6">
         <img :src="setting.logo(3)" alt="" />
       </el-col>
@@ -84,13 +66,21 @@ export default {
           <el-menu-item index="5">大咖云集</el-menu-item>
           <el-sub-menu index="6">
             <template #title>合作伙伴</template>
-            <el-menu-item index="6-1" style="color: #606266">展商合作</el-menu-item>
-            <el-menu-item index="6-2" style="color: #606266">媒体合作</el-menu-item>
+            <el-menu-item index="6-1" style="color: #606266">
+              展商合作
+            </el-menu-item>
+            <el-menu-item index="6-2" style="color: #606266">
+              媒体合作
+            </el-menu-item>
           </el-sub-menu>
           <el-sub-menu index="7">
             <template #title>关于大会</template>
-            <el-menu-item index="6-1" style="color: #606266">大会介绍</el-menu-item>
-            <el-menu-item index="6-2" style="color: #606266">参会指南</el-menu-item>
+            <el-menu-item index="6-1" style="color: #606266">
+              大会介绍
+            </el-menu-item>
+            <el-menu-item index="6-2" style="color: #606266">
+              参会指南
+            </el-menu-item>
           </el-sub-menu>
           <el-menu-item index="8">
             直播
@@ -108,25 +98,26 @@ export default {
           </el-menu-item>
         </el-menu>
       </el-col>
-      <el-col :span="6" />
+      <el-col :span="6"></el-col>
     </el-row>
     <el-row class="row3" style="font-size: 0.1714rem">
-      <el-col :span="2" />
-      <el-col :span="6">
-        <a href="">隐私协议/服务条款</a>
-      </el-col>
-      <el-col :span="3">
-        <a href="">杭州安恒信息技术股份有限公司</a>
-      </el-col>
-      <el-col :span="3">
-        <a href="">浙ICP备09102757号-28</a>
-      </el-col>
-      <el-col :span="3">
-        <a href="">浙公网安备 33010802009170号</a>
-      </el-col>
+      <el-col :span="2"></el-col>
+      <el-col :span="6"><a href="">隐私协议/服务条款</a></el-col>
+      <el-col :span="3"><a href="">杭州安恒信息技术股份有限公司</a></el-col>
+      <el-col :span="3"><a href="">浙ICP备09102757号-28</a></el-col>
+      <el-col :span="3"><a href="">浙公网安备 33010802009170号</a></el-col>
     </el-row>
   </div>
 </template>
+
+<script setup lang="ts">
+import setting from '@/setting'
+</script>
+<script lang="ts">
+export default {
+  name: 'Footer',
+}
+</script>
 
 <style scoped lang="scss">
 .footer {
